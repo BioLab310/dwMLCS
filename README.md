@@ -48,7 +48,7 @@ This code uses the command line mode to pass parameters
 1) -M
    * A: Method A represents the dwMLCS algorithm used in this paper, and finally finds all the longest common sub-sequences. For example, -M A
    * B: Method B is the automatic calculation of $LB(MLCS)$ by weight DAG in this paper. For example, -M B
-   * C: Method C is to calculate $LB(MLCS)$ by weight DAG in this paper, but it needs to specify the -S strategy and the corresponding size of $\alpha$and $\beta$（The specific meanings are as defined in definition 9 and definition 10 in this paper）
+   * C: Method C is to calculate $LB(MLCS)$ by weight DAG in this paper, but it needs to specify the -S strategy and the corresponding size of $\alpha$ and $\beta$ (The specific meanings are as defined in definition 9 and definition 10 in this paper)
    * D: Method D is the lower bound length calculated by Big-MLCS algorithm. For example, -M D
    * E: Method E is the lower bound length calculated by BEST-MLCS algorithm. For example, -M E
 2) -D
