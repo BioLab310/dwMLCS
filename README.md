@@ -24,21 +24,25 @@ We have uploaded a data set (seq.txt) that we run in our experiment, which can b
 
 This code is written by c++, and compiled and run under linux system
 
-This contains the CMakeLists.txt file, which can be built using the cmake command. When you build, you need to put all .h and .cpp files and CMakeLists.txt files in the same directory
+cmake, ninja, and gcc need to be installed in advance. The compilation process is as follows:
 
-```shell
-cmake .
-```
+1. First we need to create two folders called src and build. Then we need to add all the files from the src folder on github to the src folder we just created
 
-After the cmake build is complete, you need to compile the code using the make command
+2. We open the terminal in the build folder and execute the following command:
 
-```shell
-make
-```
+   ```shell
+   cmake /path/src -B /path/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+   # Replace /path/src with the actual path to your src directory and /path/build with the actual path you want to set as your build directory
+   ```
 
-After the compilation is complete, an executable file is generated. By default, the dwMLCS executable is generated
+3. Execute the ninja command, compile, and a dwMLCS executable will be generated:
 
-We uploaded an executable file called dwMLCS compiled in release mode using CLion development tool under linux, which can be run directly under linux system
+   ```shell
+   ninja
+   # Note that this command needs to be executed in the build directory you just created
+   ```
+
+We uploaded an executable file called dwMLCS that we compiled successfully with the above method
 
 4.Usage Notes
 --
@@ -94,6 +98,3 @@ For example, a complete run command:
 --
 
 	Please e-mail your feedback at cyyneu@126.com
-
-
-
