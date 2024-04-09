@@ -70,14 +70,16 @@ int main(int argc, char* argv[]) {
     if (method == 'A') {
         clock_t lowerStartTime = clock();
         int lowerLen = computeLower(sequences, 1, 1);
-        WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
-        int nums[4] = {2, 3, 8, 10};
-        for (const int step: nums) {
-            lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
-        }
-        WEIGHT_TIME_BOUND = 5000000;
-        if (clock() - lowerStartTime < 60000000) {
-            lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
+        if (MIN_LEN >= 95 || SEQ_LEN_SUM >= 50 && SEQ_LEN_SUM <= 1000) {
+            WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
+            int nums[4] = {2, 3, 8, 10};
+            for (const int step: nums) {
+                lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
+            }
+            WEIGHT_TIME_BOUND = 5000000;
+            if (clock() - lowerStartTime < 60000000) {
+                lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
+            }
         }
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
@@ -90,14 +92,16 @@ int main(int argc, char* argv[]) {
     else if (method == 'B') {
         clock_t lowerStartTime = clock();
         int lowerLen = computeLower(sequences, 1, 1);
-        WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
-        int nums[4] = {2, 3, 8, 10};
-        for (const int step: nums) {
-            lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
-        }
-        WEIGHT_TIME_BOUND = 5000000;
-        if (clock() - lowerStartTime < 60000000) {
-            lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
+        if (MIN_LEN >= 95 || SEQ_LEN_SUM >= 50) {
+            WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
+            int nums[4] = {2, 3, 8, 10};
+            for (const int step: nums) {
+                lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
+            }
+            WEIGHT_TIME_BOUND = 5000000;
+            if (clock() - lowerStartTime < 60000000) {
+                lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
+            }
         }
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
