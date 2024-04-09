@@ -51,8 +51,8 @@ This code uses the command line mode to pass parameters
 
 1) -M
    * A: Method A represents the dwMLCS algorithm used in this paper, and finally finds all the longest common sub-sequences. For example, -M A
-   * B: Method B is the automatic calculation of $LB(MLCS)$ by weight DAG in this paper. For example, -M B
-   * C: Method C is to calculate $LB(MLCS)$ by weight DAG in this paper, but it needs to specify the -S strategy and the corresponding size of $\alpha$ and $\beta$ (The specific meanings are as defined in definition 9 and definition 10 in this paper)
+   * B: Method B is the automatic calculation of $LB(S)$ by weight DAG in this paper. For example, -M B
+   * C: Method C is to calculate $LB(S)$ by weight DAG in this paper, but it needs to specify the -S strategy and the corresponding size of $\alpha$ and $\beta$ (The specific meanings are as defined in definition 9 and definition 10 in this paper)
 2) -D
    * Represents the number of sequences read in. For example, -D 10 indicates that 10 sequences are read sequentially from the input file as input sequences
 3) -R
