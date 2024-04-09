@@ -53,8 +53,6 @@ This code uses the command line mode to pass parameters
    * A: Method A represents the dwMLCS algorithm used in this paper, and finally finds all the longest common sub-sequences. For example, -M A
    * B: Method B is the automatic calculation of $LB(MLCS)$ by weight DAG in this paper. For example, -M B
    * C: Method C is to calculate $LB(MLCS)$ by weight DAG in this paper, but it needs to specify the -S strategy and the corresponding size of $\alpha$ and $\beta$ (The specific meanings are as defined in definition 9 and definition 10 in this paper)
-   * D: Method D is the lower bound length calculated by Big-MLCS algorithm. For example, -M D
-   * E: Method E is the lower bound length calculated by BEST-MLCS algorithm. For example, -M E
 2) -D
    * Represents the number of sequences read in. For example, -D 10 indicates that 10 sequences are read sequentially from the input file as input sequences
 3) -R
@@ -80,14 +78,6 @@ For example, a complete run command:
 * ./dwMLCS -M C -D 10 -R seq.txt -S 1 -N 3   
 
   It means that I will use the weight DAG model proposed in this paper, and explicitly specify the use of Step successor table strategy and set the parameter $\alpha$=3 (see Definition 9), and finally calculate the $LB(MLCS)$ of 10 sequences
-
-* ./dwMLCS -M D -D 30 -R seq.txt   
-
-  That means I'm going to use Big-MLCS(The algorithm compared in Figure 9 of the paper) to compute $LB(MLCS)$
-
-* ./dwMLCS -M E -D 30 -R seq.txt  
-
-  That means I'm going to use the BEST-MLCS(The algorithm compared in Figure 9 of the paper) algorithm to compute $LB(MLCS)$
 
 5.License
 --
