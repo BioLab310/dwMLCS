@@ -1,4 +1,4 @@
-// Created by dekuan
+// Created by D_Kuan
 
 #include "upper.h"
 
@@ -45,7 +45,7 @@ int computeUpper_1(const vector<uint16_t>& sucPoint, const vector<string>& seque
         }
         pq.pop();
     }
-    if (pq.empty()) {
+    if (pq.empty()) { // 证明所有min对应的都是同一条序列
         return sum;
     }
 
@@ -53,13 +53,14 @@ int computeUpper_1(const vector<uint16_t>& sucPoint, const vector<string>& seque
     int left2 = sucPoint[node2.idx] + 1;
     int len1 = sequences[node1.idx].length() - left1 + 1;
     int len2 = sequences[node2.idx].length() - left2 + 1;
-    if (len1 <= 1 || len2 <= 1) return sum;
+    if (len1 <= 1 || len2 <= 1) return sum; // 后继点已经是最后一个字符了
 
+    // 创建二维数组
     uint16_t** scoreMatrix = (uint16_t**) malloc(len1 * sizeof(uint16_t*));
     for (int i = 0; i < len1; ++i) {
         scoreMatrix[i] = (uint16_t*) malloc(len2 * sizeof(uint16_t));
     }
-
+    // 初始化零行零列为0
     for (int i = 0; i < len1; ++i) {
         scoreMatrix[i][0] = 0;
     }
@@ -89,6 +90,7 @@ int computeUpper_1(const vector<uint16_t>& sucPoint, const vector<string>& seque
     sum -= node1.upperLen + node2.upperLen;
     sum += scoreMatrix[len1 - 1][len2 - 1];
 
+    // 释放二维数组
     for (int i = 0; i < len1; ++i) {
         free(scoreMatrix[i]);
     }

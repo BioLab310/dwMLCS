@@ -1,11 +1,12 @@
-// Created by dekuan
+// Created by D_Kuan
 
 #include "lower.h"
 
-// è®¡ç®—æƒé‡åºåˆ—çš„æƒé‡
+// ¼ÆËãÈ¨ÖØĞòÁĞµÄÈ¨ÖØ
 int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, vector<WeightNode>& DAG,
                   uint32_t& maxId, vector<uint32_t>& idOfCurExtendNodes, vector<uint32_t>& idOfNextExtendNodes,
                   const vector<string>& weightSequences) {
+    // ³õÊ¼»¯
     hashTable.clear();
     DAG.clear();
     maxId = 0;
@@ -13,15 +14,17 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
     idOfNextExtendNodes.clear();
 
     vector<uint16_t> sourcePoint(SEQ_NUM, 0);
-    hashTable.emplace(sourcePoint, maxId++);
-    DAG.emplace_back(sourcePoint, 0, 0);
+    hashTable.emplace(sourcePoint, maxId++); // ½«Ô´½ÚµãÌí¼Óµ½hashtableÖĞ
+    DAG.emplace_back(sourcePoint, 0, 0); // ½«Ô´½ÚµãÌí¼Óµ½DAGÍ¼,ÔÚÁãºÅÎ»ÖÃ
 
     vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
-    hashTable.emplace(endPoint, maxId++);
-    DAG.emplace_back(endPoint, 0, 0);
+    hashTable.emplace(endPoint, maxId++); // ÖÕ½ÚµãÌí¼Óµ½hashtableÖĞ
+    DAG.emplace_back(endPoint, 0, 0); // ÖÕ½ÚµãÌí¼Óµ½DAGÖĞ,ÔÚÒ»ºÅÎ»ÖÃ
 
+    // ÏÈ´ÓÔ´½Úµã¿ªÊ¼À©Õ¹£¬Ô´½ÚµãÔÚÁãºÅË÷ÒıÎ»ÖÃ£¬ÖÕ½ÚµãÔÚÒ»ºÅË÷ÒıÎ»ÖÃ
     idOfCurExtendNodes.emplace_back(0);
 
+    // »ñµÃºó¼Ì±í
     uint16_t*** sucTbls;
     getSucTbls(&sucTbls, weightSequences);
 
@@ -33,7 +36,10 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
 
         for (const auto& curNodeId: idOfCurExtendNodes) {
 
-            if ((clock() - WEIGHT_START_TIME) > WEIGHT_TIME_BOUND) {
+            // ÕâÀïÌí¼ÓÒ»¸öÊ±¼ä½çÏŞ²ßÂÔ£¬Èç¹û³¬¹ıÉè¶¨µÄWEIGHT_TIME_BOUND»òÕß(ÄÚ´æĞ¡ÓÚ1.5GºÍÄÚ´æÊ£Óà²»×ã10%)
+            if (clock() - WEIGHT_START_TIME > WEIGHT_TIME_BOUND || (getFreeMemory() <= 1536 && getMemoryPercentage() < 0.1)) {
+
+                // ÊÍ·Åºó¼Ì±í
                 for (int i = 0; i < SEQ_NUM; ++i) {
                     for (int j = 0; j < SIGMA_NUM; ++j) {
                         free(sucTbls[i][j]);
@@ -49,13 +55,17 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
 
             for (const auto& sucPoint: sucPoints) {
                 auto sucNodeIter = hashTable.find(sucPoint);
-                if (sucNodeIter == hashTable.end()) {
+                if (sucNodeIter == hashTable.end()) { // ÔÚhashtableÖĞ²»´æÔÚ
+                    // ¸üĞÂµ±Ç°½ÚµãµÄºó¼Ì
                     DAG[curNodeId].idOfSucNodes.emplace_back(maxId);
                     idOfNextExtendNodes.emplace_back(maxId);
+                    // ½«¸Ãºó¼Ì½ÚµãÌí¼Óµ½DAGÍ¼ÖĞ£¬Ìí¼Óµ½DAGµÄÄ©Î²
                     DAG.emplace_back(sucPoint, 1, 0);
+                    // ½«¸Ãºó¼Ì½ÚµãÌí¼Óµ½hashtableÖĞ
                     hashTable.emplace(sucPoint, maxId);
                     ++maxId;
-                } else {
+                } else { // ÔÚhashtableÖĞ´æÔÚ
+                    // ¸üĞÂµ±Ç°½ÚµãµÄºó¼ÌºÍºó¼Ì½ÚµãµÄÈë¶È
                     ++(DAG[sucNodeIter->second].indegree);
                     DAG[curNodeId].idOfSucNodes.emplace_back(sucNodeIter->second);
                 }
@@ -64,11 +74,15 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
         idOfCurExtendNodes = idOfNextExtendNodes;
     }
 
+    // ¹¹ÔìÍêDAGÍ¼Ö®ºó£¬ĞèÒªÍ¨¹ıÍ¼µÄ²ã´Î±éÀúÇóÃ¿¸ö½ÚµãµÄcurLen
     queue<uint32_t> Q;
-    Q.push(0);
+    Q.push(0); // ´ÓÔ´½Úµã¿ªÊ¼±éÀúDAG
     while (!Q.empty()) {
 
-        if ((clock() - WEIGHT_START_TIME) > WEIGHT_TIME_BOUND) {
+        // ÕâÀïÌí¼ÓÒ»¸öÊ±¼ä½çÏŞ²ßÂÔ£¬Èç¹û³¬¹ıÉè¶¨µÄWEIGHT_TIME_BOUND»òÕß(ÄÚ´æĞ¡ÓÚ1.5GºÍÄÚ´æÊ£Óà²»×ã10%)
+        if (clock() - WEIGHT_START_TIME > WEIGHT_TIME_BOUND || (getFreeMemory() <= 1536 && getMemoryPercentage() < 0.1)) {
+
+            // ÊÍ·Åºó¼Ì±í
             for (int i = 0; i < SEQ_NUM; ++i) {
                 for (int j = 0; j < SIGMA_NUM; ++j) {
                     free(sucTbls[i][j]);
@@ -83,6 +97,7 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
         Q.pop();
         for (const auto& sucNodeId: DAG[curNodeId].idOfSucNodes) {
             if (--DAG[sucNodeId].indegree == 0 || sucNodeId == 1) {
+                // ÕâÀï¼ÆËãµÄÊ±ºòÒ²°ÑÖÕµãËã×÷Ò»¸ö½ÚµãÁË£¬Ò²¼ÓÉÏÒ»ÁË£¬ËùÒÔ×îºó³¤¶ÈĞèÒª¼õÒ»
                 DAG[sucNodeId].curLen = max<int>(DAG[sucNodeId].curLen, DAG[curNodeId].curLen + 1);
                 if (sucNodeId != 1) {
                     Q.push(sucNodeId);
@@ -91,6 +106,7 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
         }
     }
 
+    // ÊÍ·Åºó¼Ì±í
     for (int i = 0; i < SEQ_NUM; ++i) {
         for (int j = 0; j < SIGMA_NUM; ++j) {
             free(sucTbls[i][j]);
@@ -99,14 +115,15 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
     }
     free(sucTbls);
 
-    return DAG[1].curLen - 1;
+    return DAG[1].curLen - 1; // ²»ËãÉÏÖÕ½ÚµãµÄ³¤¶ÈÒ»
 }
 
-// é€šè¿‡æƒé‡è®¡ç®—ä¸‹ç•Œï¼Œæ¯æ¬¡å‘åæ‰©å±•zetaä¸ªèŠ‚ç‚¹
-// æ¯æ¬¡é€‰å–å‰zetaä¸ªsumå°çš„
+// Í¨¹ıÈ¨ÖØ¼ÆËãÏÂ½ç£¬Ã¿´ÎÏòºóÀ©Õ¹zeta¸ö½Úµã
+// Ã¿´ÎÑ¡È¡Ç°zeta¸ösumĞ¡µÄ
 int computeLower(const vector<string>& sequences, const int strategy, const int num, int zeta) {
     WEIGHT_START_TIME = clock();
 
+    // ÕâÊÇ¼ÆËãÈ¨ÖØĞòÁĞµÄÈ¨ÖØĞèÒªµÄ½á¹¹
     boost::unordered_map<vector<uint16_t>, uint32_t> hashTable;
     vector<WeightNode> DAG;
     uint32_t maxId = 0;
@@ -119,7 +136,7 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
     boost::unordered_map<vector<uint16_t>, int>* nextLevel = &level2;
     priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2> candidates;
 
-    int maxLen = 0;
+    int maxLen = 0; // ×îÖÕµÄÏÂ½ç³¤¶È
     vector<uint16_t> sourcePoint(SEQ_NUM, 0);
     vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
     vector<string> weightSequences;
@@ -127,32 +144,43 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
     vector<vector<uint16_t>> sucPoints;
     sucPoints.reserve(SIGMA_NUM);
 
+    // ¸ù¾İ²»Í¬µÄ²ßÂÔ»ñµÃ²»Í¬µÄºó¼Ì±í
     uint16_t*** sucTbls;
     if (strategy == 1) {
         getSucTblsByStep(&sucTbls, sequences, num);
     } else {
-        getSucTblsBySection(&sucTbls, sequences, num);
+        getSucTblsBySection(&sucTbls, sequences);
     }
 
     curLevel->emplace(sourcePoint, 0);
     while (!curLevel->empty()) {
         for (const auto& curNode: *curLevel) {
             sucPoints.clear();
-            getSucPoints(sucPoints, curNode.first, sucTbls);
+            if (strategy == 1) {
+                getSucPoints(sucPoints, curNode.first, sucTbls);
+            } else {
+                getSucPointsOfSection(sucPoints, curNode.first, sucTbls, sequences, num);
+            }
+            // ¼ÆËãsum
             int sum;
             for (const auto& sucPoint: sucPoints) {
+                // Èç¹ûµ±Ç°ºó¼Ìµã²»ÔÚÏÂÒ»²ãÖĞ
                 if (nextLevel->find(sucPoint) == nextLevel->end()) {
                     sum = 0;
                     for (uint16_t item: sucPoint) {
                         sum += item;
                     }
+                    // ÕâÀïµÄzeta¿ÉÒÔ¸ü¸Ä£¬ÕâÀïÏŞ¶¨Ã¿²ã×î¶àÖ»ÄÜÓµÓĞzeta¸ö½Úµã
                     if (candidates.size() == zeta) {
+                        // Èç¹ûµ±Ç°ºó¼ÌµãµÄ·½²îºÍ±ÈÏÂÒ»²ãÖĞµÄÃ¿¸ö·½²î¶¼´ó£¬Í¬Ê±ÏÂÒ»²ãÇ¡ºÃÒÑ¾­zeta¸ö½ÚµãÁË£¬ÔòÖ±½ÓÌø¹ı
                         if (sum >= candidates.top().second) continue;
+                        // ·ñÔòÉ¾³ı¶Ñ¶¥µÄ×î´ó·½²îµÄÄÇ¸öÆ¥Åäµã£¬Í¬Ê±ÔÚÏÂÒ»²ãÖĞÉ¾³ıËü
                         nextLevel->erase(candidates.top().first);
                         candidates.pop();
+                        // Í¬Ê±½«¸Ãºó¼ÌµãÌí¼Óµ½ÏÂÒ»²ãÖĞ£¬Í¬Ê±Ìí¼Óµ½ÓÅÏÈ¼¶¶ÓÁĞÖĞ
                         nextLevel->emplace(sucPoint, 0);
                         candidates.emplace(sucPoint, sum);
-                    } else {
+                    } else { // ÏÂÒ»²ãÎ´Âúzeta¸ö½Úµã£¬ÔòÖ±½ÓÌí¼Óµ½ÏÂÒ»²ãºÍÓÅÏÈ¼¶¶ÓÁĞÖĞ
                         nextLevel->emplace(sucPoint, 0);
                         candidates.emplace(sucPoint, sum);
                     }
@@ -160,27 +188,32 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
             }
         }
 
+        // ¼ÆËãµ±Ç°½ÚµãºÍºó¼ÌµãÖ®¼äµÄÈ¨ÖØ
         for (const auto& curNode: *curLevel) {
             for (auto& sucNode: *nextLevel) {
                 weightSequences.clear();
                 int weight = -1;
                 int left;
                 int right;
-                if (sucNode.first == endPoint) {
+                if (sucNode.first == endPoint) { // Èç¹ûµ±Ç°½ÚµãµÄºó¼Ì½ÚµãÊÇÖÕ½Úµã
                     for (int i = 0; i < SEQ_NUM; ++i) {
                         left = curNode.first[i];
+                        // Èç¹ûÈ¨ÖØĞòÁĞµÄ×î×óÃæÄÇ¸ö×Ö·ûÕıºÃÊÇÔ­ĞòÁĞµÄ×îºóÒ»¸ö×Ö·û£¬ÄÇÃ´È¨ÖØÎª0,ÒòÎªÎÒÒª´Óleft+1µÄÎ»ÖÃ¿ªÊ¼½ØÈ¡È¨ÖØĞòÁĞ
                         if (left == sequences[i].length() - 1) {
                             weight = 0;
                             break;
                         }
                         weightSequences.emplace_back(" ");
+                        // append·½·¨ÊÇ×ó±ÕÓÒ¿ªµÄ
+                        // µ«ÊÇ½ØÈ¡ĞòÁĞµÄ´Óleft+1¿ªÊ¼µ½right
                         weightSequences[i].append(sequences[i].begin() + left + 1, sequences[i].end());
                     }
                     if (weight == -1) {
                         weight = computeWeight(hashTable, DAG, maxId, idOfCurExtendNodes, idOfNextExtendNodes,
                                                weightSequences);
 
-                        if (weight == -2) {
+                        if (weight == -2) { // ´ú±í³¬Ê±ÁË
+                            // ÊÍ·Åºó¼Ì±í
                             for (int i = 0; i < SEQ_NUM; ++i) {
                                 for (int j = 0; j < SIGMA_NUM; ++j) {
                                     free(sucTbls[i][j]);
@@ -196,10 +229,12 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
                         left = curNode.first[i];
                         right = sucNode.first[i];
                         if (left >= right) {
-                            weight = -3;
+                            weight = -3; // ´ú±í²¢²»ÊÇµ±Ç°½ÚµãµÄºó¼Ì
                             break;
                         }
                         weightSequences.emplace_back(" ");
+                        // append·½·¨ÊÇ×ó±ÕÓÒ¿ªµÄ
+                        // µ«ÊÇ½ØÈ¡µÄĞòÁĞ´Óleft+1¿ªÊ¼µ½right
                         weightSequences[i].append(sequences[i].begin() + left + 1, sequences[i].begin() + right + 1);
                     }
                     if (weight == -1) {
@@ -207,6 +242,7 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
                                                weightSequences);
 
                         if (weight == -2) {
+                            // ÊÍ·Åºó¼Ì±í
                             for (int i = 0; i < SEQ_NUM; ++i) {
                                 for (int j = 0; j < SIGMA_NUM; ++j) {
                                     free(sucTbls[i][j]);
@@ -222,7 +258,7 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
                 }
             }
         }
-
+        // ÏÂÒ»²ãÉ¾³ıÖÕµã
         auto iter = nextLevel->find(endPoint);
         if (iter != nextLevel->end()) {
             maxLen = max<int>(iter->second, maxLen);
@@ -235,7 +271,7 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
         priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2>().swap(candidates);
 
     }
-
+    // ÊÍ·Åºó¼Ì±í
     for (int i = 0; i < SEQ_NUM; ++i) {
         for (int j = 0; j < SIGMA_NUM; ++j) {
             free(sucTbls[i][j]);
@@ -246,9 +282,9 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
     return maxLen;
 }
 
-// è¿‘ä¼¼ä¸‹ç•Œ,æ¯æ¬¡ä¹‹äº§ç”Ÿä¸€ä¸ªåç»§ç‚¹å‘åè¿­ä»£è®¡ç®—
+// ½üËÆÏÂ½ç,Ã¿´ÎÖ®²úÉúÒ»¸öºó¼ÌµãÏòºóµü´ú¼ÆËã
 // Big-MLCS
-int BigMLCS(uint16_t*** sucTbls) {
+int bigMlcs(uint16_t*** sucTbls) {
     int level = 0;
     vector<uint16_t> curMatchPoint(SEQ_NUM, 0);
     vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
@@ -263,24 +299,25 @@ int BigMLCS(uint16_t*** sucTbls) {
         if (sucPoints.size() == 1) {
             index = 0;
         } else {
+            // ÓÅÏÈÑ¡ÔñsumĞ¡µÄºó¼Ìµã
             index = selectOnePoint(sucPoints);
         }
 
         ++level;
         curMatchPoint = sucPoints[index];
     }
-    return level - 1;
+    return level - 1; // ÒòÎª°Ñ×îºóÖÕµãÒ²¼ÓÒ»ÁË
 }
 
-// è¿‘ä¼¼ä¸‹ç•Œï¼Œæ¯æ¬¡äº§ç”Ÿä¸¤ä¸ªåç»§ç‚¹å‘åè¿­ä»£è®¡ç®—
-// Best-MLCS
-// æ¯å±‚ä¸­çš„èŠ‚ç‚¹ä¸ªæ•°é»˜è®¤è®¾ç½®ä¸º256ä¸ª
-int BestMLCS(uint16_t*** sucTbls, int theta) {
+// ½üËÆÏÂ½ç£¬Ã¿´Î²úÉúÁ½¸öºó¼ÌµãÏòºóµü´ú¼ÆËã
+// BEST-MLCS
+// Ã¿²ãÖĞµÄ½Úµã¸öÊıÄ¬ÈÏÉèÖÃÎª256¸ö
+int bestMlcs(uint16_t*** sucTbls, int theta) {
     boost::unordered_set<vector<uint16_t>> level1;
     boost::unordered_set<vector<uint16_t>> level2;
     boost::unordered_set<vector<uint16_t>>* curLevel = &level1;
     boost::unordered_set<vector<uint16_t>>* nextLevel = &level2;
-    priority_queue<vector<uint16_t>, vector<vector<uint16_t>>, cmp1> pq;
+    priority_queue<vector<uint16_t>, vector<vector<uint16_t>>, cmp1> pq; // ´ó¸ù¶Ñ
 
     int len = 0;
     uint32_t topSum = 0;
@@ -295,27 +332,36 @@ int BestMLCS(uint16_t*** sucTbls, int theta) {
         for (const auto& matchPoint: *curLevel) {
             sucPoints.clear();
             getSucPoints(sucPoints, matchPoint, sucTbls);
+            // Èç¹û²úÉúµÄºó¼ÌÊÇÖÕµã£¬Ôò²»·ÅÈëÏÂÒ»²ã
             if (sucPoints[0] == endPoint) {
                 continue;
             }
             for (const auto& sucPoint: sucPoints) {
+                // Èç¹ûµ±Ç°ºó¼Ìµã²»ÔÚÏÂÒ»²ãÖĞ
                 if (nextLevel->find(sucPoint) == nextLevel->end()) {
+                    // ¼ÆËãµ±Ç°ºó¼ÌµãµÄsumºÍ
                     uint32_t sucSum = 0;
                     for (uint16_t num: sucPoint) sucSum += num;
+                    // ÕâÀïµÄ256¿ÉÒÔ¸ü¸Ä£¬ÕâÀïÏŞ¶¨Ã¿²ã×î¶àÖ»ÄÜÓµÓĞ256¸ö½Úµã
                     if (pq.size() == theta) {
+                        // Èç¹ûµ±Ç°ºó¼ÌµãµÄsumºÍ±ÈÏÂÒ»²ãÖĞµÄÃ¿¸ösum¶¼´ó£¬Í¬Ê±ÏÂÒ»²ãÇ¡ºÃÒÑ¾­256¸ö½ÚµãÁË£¬ÔòÖ±½ÓÌø¹ı
                         if (sucSum >= topSum) continue;
+                        // ·ñÔòÉ¾³ı¶Ñ¶¥µÄ×î´ósumµÄÄÇ¸öÆ¥Åäµã£¬Í¬Ê±ÔÚÏÂÒ»²ãÖĞÉ¾³ıËü
                         nextLevel->erase(pq.top());
                         pq.pop();
+                        // Í¬Ê±½«¸Ãºó¼ÌµãÌí¼Óµ½ÏÂÒ»²ãÖĞ£¬Í¬Ê±Ìí¼Óµ½ÓÅÏÈ¼¶¶ÓÁĞÖĞ
                         nextLevel->insert(sucPoint);
                         pq.push(sucPoint);
+                        // Í¬Ê±¸üĞÂ¶Ñ¶¥ÔªËØµÄsumºÍ
                         topSum = 0;
                         for (uint16_t num: pq.top()) topSum += num;
-                    } else {
+                    } else { // ÏÂÒ»²ãÎ´Âú256¸ö½Úµã£¬ÔòÖ±½ÓÌí¼Óµ½ÏÂÒ»²ãºÍÓÅÏÈ¼¶¶ÓÁĞÖĞ
                         nextLevel->insert(sucPoint);
                         pq.push(sucPoint);
                         if (sucSum > topSum) topSum = sucSum;
                     }
                 }
+                // Èç¹ûµ±Ç°ºó¼ÌµãÔÚÏÂÒ»²ãÖĞ£¬ÔòÖ±½ÓÌø¹ı
             }
         }
         boost::unordered_set<vector<uint16_t>>* temp = curLevel;
@@ -326,6 +372,72 @@ int BestMLCS(uint16_t*** sucTbls, int theta) {
         topSum = 0;
         ++len;
     }
+    // ¼õÈ¥Ô´µãÄÇ²ã
+    return len - 1;
+}
 
+// ½üËÆÏÂ½ç£¬Ã¿´Î²úÉút¸öºó¼ÌµãÏòºóµü´ú¼ÆËã
+// mini-MLCS
+// tÎª³õÊ¼Öµ£¬muÎª²½³¤£¬tauÎª²ã¼¶½Úµã¸öÊı×î´óÖµ
+int miniMlcs(uint16_t*** sucTbls, int t, int mu, int tau) {
+    boost::unordered_set<vector<uint16_t>> level1;
+    boost::unordered_set<vector<uint16_t>> level2;
+    boost::unordered_set<vector<uint16_t>>* curLevel = &level1;
+    boost::unordered_set<vector<uint16_t>>* nextLevel = &level2;
+    priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2> pq; // ´ó¸ù¶Ñ
+
+    int len = 0;
+    vector<uint16_t> sourcePoint(SEQ_NUM, 0);
+    vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
+    vector<vector<uint16_t>> sucPoints;
+    sucPoints.reserve(SIGMA_NUM);
+
+    curLevel->insert(sourcePoint);
+
+    while (!curLevel->empty()) {
+        for (const auto& matchPoint: *curLevel) {
+            sucPoints.clear();
+            getSucPoints(sucPoints, matchPoint, sucTbls);
+            // Èç¹û²úÉúµÄºó¼ÌÊÇÖÕµã£¬Ôò²»·ÅÈëÏÂÒ»²ã
+            if (sucPoints[0] == endPoint) {
+                continue;
+            }
+            for (const auto& sucPoint: sucPoints) {
+                // Èç¹ûµ±Ç°ºó¼Ìµã²»ÔÚÏÂÒ»²ãÖĞ
+                if (nextLevel->find(sucPoint) == nextLevel->end()) {
+                    //  ¦Õ=max()-min()Ğ¡ÓÅÏÈ
+                    uint32_t maxVal = 0, minVal = UINT32_MAX, phi = 0;
+                    for (uint16_t num : sucPoint) {
+                        maxVal = max<uint32_t>(maxVal, num);
+                        minVal = min<uint32_t>(minVal, num);
+                    }
+                    phi = maxVal - minVal;
+                    // ÕâÀïµÄ128¿ÉÒÔ¸ü¸Ä£¬ÕâÀïÏŞ¶¨Ã¿²ã×î¶àÖ»ÄÜÓµÓĞ128¸ö½Úµã
+                    if (pq.size() == t) {
+                        // Èç¹ûµ±Ç°ºó¼ÌµãµÄ¦ÕºÍ±ÈÏÂÒ»²ãÖĞµÄÃ¿¸ö¦Õ¶¼´ó£¬Í¬Ê±ÏÂÒ»²ãÇ¡ºÃÒÑ¾­128¸ö½ÚµãÁË£¬ÔòÖ±½ÓÌø¹ı
+                        if (phi >= pq.top().second) continue;
+                        // ·ñÔòÉ¾³ı¶Ñ¶¥µÄ×î´ó¦ÕµÄÄÇ¸öÆ¥Åäµã£¬Í¬Ê±ÔÚÏÂÒ»²ãÖĞÉ¾³ıËü
+                        nextLevel->erase(pq.top().first);
+                        pq.pop();
+                        // Í¬Ê±½«¸Ãºó¼ÌµãÌí¼Óµ½ÏÂÒ»²ãÖĞ£¬Í¬Ê±Ìí¼Óµ½ÓÅÏÈ¼¶¶ÓÁĞÖĞ
+                        nextLevel->insert(sucPoint);
+                        pq.emplace(sucPoint, phi);
+                    } else { // ÏÂÒ»²ãÎ´Âú128¸ö½Úµã£¬ÔòÖ±½ÓÌí¼Óµ½ÏÂÒ»²ãºÍÓÅÏÈ¼¶¶ÓÁĞÖĞ
+                        nextLevel->insert(sucPoint);
+                        pq.emplace(sucPoint, phi);
+                    }
+                }
+                // Èç¹ûµ±Ç°ºó¼ÌµãÔÚÏÂÒ»²ãÖĞ£¬ÔòÖ±½ÓÌø¹ı
+            }
+        }
+        t = min(tau, t + mu);
+        boost::unordered_set<vector<uint16_t>>* temp = curLevel;
+        curLevel = nextLevel;
+        nextLevel = temp;
+        nextLevel->clear();
+        priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2>().swap(pq);
+        ++len;
+    }
+    // ¼õÈ¥Ô´µãÄÇ²ã
     return len - 1;
 }

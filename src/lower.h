@@ -1,4 +1,4 @@
-// Created by dekuan
+// Created by D_Kuan
 
 #include "basic.h"
 
@@ -26,7 +26,6 @@ struct cmp1 {
     }
 };
 
-// sum小优先
 // 大根堆
 struct cmp2 {
     bool operator()(const pair<vector<uint16_t>, int>& p1,
@@ -45,9 +44,14 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
 
 // 近似下界,每次之产生一个后继点向后迭代计算
 // Big-MLCS
-int BigMLCS(uint16_t*** sucTbls);
+int bigMlcs(uint16_t*** sucTbls);
 
-// 近似下界，每次产生两个后继点向后迭代计算
-// Best-MLCS
+// 近似下界，每次产生theta个后继点向后迭代计算
+// BEST-MLCS
 // 每层中的节点个数默认设置为256个
-int BestMLCS(uint16_t*** sucTbls, int theta = 256);
+int bestMlcs(uint16_t*** sucTbls, int theta = 256);
+
+// 近似下界，每次产生t个后继点向后迭代计算
+// mini-MLCS
+// t为初始值，mu为步长，tau为层级节点个数最大值
+int miniMlcs(uint16_t*** sucTbls, int t, int mu, int tau);

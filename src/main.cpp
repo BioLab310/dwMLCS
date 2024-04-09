@@ -1,4 +1,4 @@
-// Created by dekuan
+// Created by D_Kuan
 
 #include "basic.h"
 #include "lower.h"
@@ -24,11 +24,12 @@ int main(int argc, char* argv[]) {
     int num; // 对应于文章后继表部分的α和β
 
     // 选择运行那种方法：
-    // A：W_MLCS的整体算法
+    // A：dwMLCS的整体算法
     // B：自动求下界，不需要指定策略和参数
     // C: 指定某种策略求下界
     // D：Big-MLCS的下界
     // E：BEST-MLCS的下界
+    // F: mini-MLCS的下界
     char method;
 
     for (int i = 1; i < argc; i += 2) {
@@ -36,24 +37,24 @@ int main(int argc, char* argv[]) {
         if (argv[i][0] == '-' && argv[i][1] == 'D') {
             SEQ_NUM = stoi(argv[i + 1]);
         }
-            // -R参数代表输入路径
+        // -R参数代表输入路径
         else if (argv[i][0] == '-' && argv[i][1] == 'R') {
             READ_PATH = argv[i + 1];
         }
-            // -W参数代表输出路径
+        // -W参数代表输出路径
         else if (argv[i][0] == '-' && argv[i][1] == 'W') {
             WRITE_PATH = argv[i + 1];
         }
-            // 其中-S和-N必须同时传参，如果不指定-S和-N则使用经验计算下界
-            // -S参数代表选择的下界策略
+        // 其中-S和-N必须同时传参，如果不指定-S和-N则使用经验计算下界
+        // -S参数代表选择的下界策略
         else if (argv[i][0] == '-' && argv[i][1] == 'S') {
             strategy = stoi(argv[i + 1]);
         }
-            // -N参数代表选择的策略以及对应的step或者section
+        // -N参数代表选择的策略以及对应的step或者section
         else if (argv[i][0] == '-' && argv[i][1] == 'N') {
             num = stoi(argv[i + 1]);
         }
-            // -M参数代表选择是求mlcs还是求下界
+        // -M参数代表选择是求mlcs还是求下界
         else if (argv[i][0] == '-' && argv[i][1] == 'M') {
             method = argv[i + 1][0];
         }
@@ -69,16 +70,14 @@ int main(int argc, char* argv[]) {
     if (method == 'A') {
         clock_t lowerStartTime = clock();
         int lowerLen = computeLower(sequences, 1, 1);
-        if (MIN_LEN >= 95 || SEQ_LEN_SUM >= 50 && SEQ_LEN_SUM <= 1000) {
-            WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
-            int nums[4] = {2, 3, 8, 10};
-            for (const int step: nums) {
-                lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
-            }
-            WEIGHT_TIME_BOUND = 5000000;
-            if (clock() - lowerStartTime < 60000000) {
-                lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
-            }
+        WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
+        int nums[4] = {2, 3, 8, 10};
+        for (const int step: nums) {
+            lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
+        }
+        WEIGHT_TIME_BOUND = 5000000;
+        if (clock() - lowerStartTime < 60000000) {
+            lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
         }
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
@@ -87,51 +86,86 @@ int main(int argc, char* argv[]) {
 
         cout << "Total time cost:" << (clock() - start) / 1000 << "ms" << endl;
     }
-        // 自动求下界，不需要指定策略和参数
+    // 自动求下界，不需要指定策略和参数
     else if (method == 'B') {
         clock_t lowerStartTime = clock();
         int lowerLen = computeLower(sequences, 1, 1);
-        if (MIN_LEN >= 95 || SEQ_LEN_SUM >= 50) {
-            WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
-            int nums[4] = {2, 3, 8, 10};
-            for (const int step: nums) {
-                lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
-            }
-            WEIGHT_TIME_BOUND = 5000000;
-            if (clock() - lowerStartTime < 60000000) {
-                lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
-            }
+        WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
+        int nums[4] = {2, 3, 8, 10};
+        for (const int step: nums) {
+            lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
+        }
+        WEIGHT_TIME_BOUND = 5000000;
+        if (clock() - lowerStartTime < 60000000) {
+            lowerLen = max<int>(lowerLen, computeLower(sequences, 2, 60));
         }
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
     }
-        // 指定某种策略求下界，需要传入适当的α或者β大小，否则计算下界的时间会很长
+    // 指定某种策略求下界，需要传入适当的α或者β大小，否则计算下界的时间会很长
     else if (method == 'C') {
         clock_t lowerStartTime = clock();
         WEIGHT_TIME_BOUND = 240000000; // 某个权重计算最多4分钟
-
         int lowerLen = computeLower(sequences, strategy, num);
         if (lowerLen == -2) {
-            cout << "The lower bound cannot be calculated based on the parameters passed in the limited time."
+            cout << "The lower bound cannot be calculated based on the parameters passed in the limited time or limited memory."
                     "Please change the parameter size and try again." << endl;
         } else {
             cout << "Lower bound length:" << lowerLen << endl;
             cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
         }
     }
-        // BIG_MLCS的下界
+    // Big-MLCS的下界
     else if (method == 'D') {
         clock_t lowerStartTime = clock();
-        int lowerLen = BigMLCS(sucTbls);
+        int lowerLen = bigMlcs(sucTbls);
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
     }
-        // BEST_MLCS的下界
+    // BEST-MLCS的下界
     else if (method == 'E') {
         clock_t lowerStartTime = clock();
-        int lowerLen = BestMLCS(sucTbls);
+        int lowerLen = bestMlcs(sucTbls);
+        cout << "Lower bound length:" << lowerLen << endl;
+        cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
+    }
+    // mini-MLCS的下界
+    else if (method == 'F') {
+        clock_t lowerStartTime = clock();
+        int lowerLen = miniMlcs(sucTbls, 64, 8, 128);
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
     }
     return 0;
 }
+
+/*// 测试使用
+int main(int argc, char* argv[]) {
+    // 输入序列
+    vector<string> sequences;
+    *//*sequences.emplace_back(" ATGATCGC");
+    sequences.emplace_back(" CATACTGA");
+    sequences.emplace_back(" TATCATGC");*//*
+    sequences.emplace_back(" AC");
+    sequences.emplace_back(" GT");
+    sequences.emplace_back(" WU");
+
+    // 序列数量
+    SEQ_NUM = 3;
+
+    // 序列集
+    SIGMA = "ACGTWU";
+    SIGMA_NUM = 6;
+
+    // 后继表
+    uint16_t*** sucTbls;
+    getSucTblsByStep(&sucTbls, sequences, 2);
+
+    dwMLCS(sucTbls, sequences, 0);
+
+//    printSucTbls(sucTbls, sequences);
+
+//    int lower = computeLower(sequences, 1, 1);
+
+//    cout << lower << endl;
+}*/
