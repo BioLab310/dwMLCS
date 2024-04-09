@@ -39,19 +39,8 @@ int computeWeight(boost::unordered_map<vector<uint16_t>, uint32_t>& hashTable, v
                   uint32_t& maxId, vector<uint32_t>& idOfCurExtendNodes, vector<uint32_t>& idOfNextExtendNodes,
                   const vector<string>& weightSequences);
 
-// 通过权重计算下界，每次向后扩展zeta(默认256)个节点
+// 通过权重计算下界，每次向后扩展zeta个节点
 int computeLower(const vector<string>& sequences, const int strategy, const int num, int zeta = 256);
 
-// 近似下界,每次之产生一个后继点向后迭代计算
-// Big-MLCS
-int bigMlcs(uint16_t*** sucTbls);
-
-// 近似下界，每次产生theta个后继点向后迭代计算
-// BEST-MLCS
-// 每层中的节点个数默认设置为256个
-int bestMlcs(uint16_t*** sucTbls, int theta = 256);
-
-// 近似下界，每次产生t个后继点向后迭代计算
-// mini-MLCS
-// t为初始值，mu为步长，tau为层级节点个数最大值
-int miniMlcs(uint16_t*** sucTbls, int t, int mu, int tau);
+// 快速计算下界
+int quickLower(uint16_t*** sucTbls, int theta = 256);

@@ -282,37 +282,8 @@ int computeLower(const vector<string>& sequences, const int strategy, const int 
     return maxLen;
 }
 
-// 近似下界,每次之产生一个后继点向后迭代计算
-// Big-MLCS
-int bigMlcs(uint16_t*** sucTbls) {
-    int level = 0;
-    vector<uint16_t> curMatchPoint(SEQ_NUM, 0);
-    vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
-    vector<vector<uint16_t>> sucPoints;
-    sucPoints.reserve(SIGMA_NUM);
-
-    while (curMatchPoint != endPoint) {
-        sucPoints.clear();
-        getSucPoints(sucPoints, curMatchPoint, sucTbls);
-
-        int index;
-        if (sucPoints.size() == 1) {
-            index = 0;
-        } else {
-            // 优先选择sum小的后继点
-            index = selectOnePoint(sucPoints);
-        }
-
-        ++level;
-        curMatchPoint = sucPoints[index];
-    }
-    return level - 1; // 因为把最后终点也加一了
-}
-
-// 近似下界，每次产生两个后继点向后迭代计算
-// BEST-MLCS
-// 每层中的节点个数默认设置为256个
-int bestMlcs(uint16_t*** sucTbls, int theta) {
+// 快速计算下界
+int quickLower(uint16_t*** sucTbls, int theta) {
     boost::unordered_set<vector<uint16_t>> level1;
     boost::unordered_set<vector<uint16_t>> level2;
     boost::unordered_set<vector<uint16_t>>* curLevel = &level1;
@@ -342,9 +313,8 @@ int bestMlcs(uint16_t*** sucTbls, int theta) {
                     // 计算当前后继点的sum和
                     uint32_t sucSum = 0;
                     for (uint16_t num: sucPoint) sucSum += num;
-                    // 这里的256可以更改，这里限定每层最多只能拥有256个节点
                     if (pq.size() == theta) {
-                        // 如果当前后继点的sum和比下一层中的每个sum都大，同时下一层恰好已经256个节点了，则直接跳过
+                        // 如果当前后继点的sum和比下一层中的每个sum都大，同时下一层恰好已经theta个节点了，则直接跳过
                         if (sucSum >= topSum) continue;
                         // 否则删除堆顶的最大sum的那个匹配点，同时在下一层中删除它
                         nextLevel->erase(pq.top());
@@ -355,7 +325,7 @@ int bestMlcs(uint16_t*** sucTbls, int theta) {
                         // 同时更新堆顶元素的sum和
                         topSum = 0;
                         for (uint16_t num: pq.top()) topSum += num;
-                    } else { // 下一层未满256个节点，则直接添加到下一层和优先级队列中
+                    } else { // 下一层未满theta个节点，则直接添加到下一层和优先级队列中
                         nextLevel->insert(sucPoint);
                         pq.push(sucPoint);
                         if (sucSum > topSum) topSum = sucSum;
@@ -370,72 +340,6 @@ int bestMlcs(uint16_t*** sucTbls, int theta) {
         nextLevel->clear();
         priority_queue<vector<uint16_t>, vector<vector<uint16_t>>, cmp1>().swap(pq);
         topSum = 0;
-        ++len;
-    }
-    // 减去源点那层
-    return len - 1;
-}
-
-// 近似下界，每次产生t个后继点向后迭代计算
-// mini-MLCS
-// t为初始值，mu为步长，tau为层级节点个数最大值
-int miniMlcs(uint16_t*** sucTbls, int t, int mu, int tau) {
-    boost::unordered_set<vector<uint16_t>> level1;
-    boost::unordered_set<vector<uint16_t>> level2;
-    boost::unordered_set<vector<uint16_t>>* curLevel = &level1;
-    boost::unordered_set<vector<uint16_t>>* nextLevel = &level2;
-    priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2> pq; // 大根堆
-
-    int len = 0;
-    vector<uint16_t> sourcePoint(SEQ_NUM, 0);
-    vector<uint16_t> endPoint(SEQ_NUM, UINT16_MAX);
-    vector<vector<uint16_t>> sucPoints;
-    sucPoints.reserve(SIGMA_NUM);
-
-    curLevel->insert(sourcePoint);
-
-    while (!curLevel->empty()) {
-        for (const auto& matchPoint: *curLevel) {
-            sucPoints.clear();
-            getSucPoints(sucPoints, matchPoint, sucTbls);
-            // 如果产生的后继是终点，则不放入下一层
-            if (sucPoints[0] == endPoint) {
-                continue;
-            }
-            for (const auto& sucPoint: sucPoints) {
-                // 如果当前后继点不在下一层中
-                if (nextLevel->find(sucPoint) == nextLevel->end()) {
-                    //  φ=max()-min()小优先
-                    uint32_t maxVal = 0, minVal = UINT32_MAX, phi = 0;
-                    for (uint16_t num : sucPoint) {
-                        maxVal = max<uint32_t>(maxVal, num);
-                        minVal = min<uint32_t>(minVal, num);
-                    }
-                    phi = maxVal - minVal;
-                    // 这里的128可以更改，这里限定每层最多只能拥有128个节点
-                    if (pq.size() == t) {
-                        // 如果当前后继点的φ和比下一层中的每个φ都大，同时下一层恰好已经128个节点了，则直接跳过
-                        if (phi >= pq.top().second) continue;
-                        // 否则删除堆顶的最大φ的那个匹配点，同时在下一层中删除它
-                        nextLevel->erase(pq.top().first);
-                        pq.pop();
-                        // 同时将该后继点添加到下一层中，同时添加到优先级队列中
-                        nextLevel->insert(sucPoint);
-                        pq.emplace(sucPoint, phi);
-                    } else { // 下一层未满128个节点，则直接添加到下一层和优先级队列中
-                        nextLevel->insert(sucPoint);
-                        pq.emplace(sucPoint, phi);
-                    }
-                }
-                // 如果当前后继点在下一层中，则直接跳过
-            }
-        }
-        t = min(tau, t + mu);
-        boost::unordered_set<vector<uint16_t>>* temp = curLevel;
-        curLevel = nextLevel;
-        nextLevel = temp;
-        nextLevel->clear();
-        priority_queue<pair<vector<uint16_t>, int>, vector<pair<vector<uint16_t>, int>>, cmp2>().swap(pq);
         ++len;
     }
     // 减去源点那层

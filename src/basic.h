@@ -55,9 +55,7 @@ void getSucPoints(vector<vector<uint16_t>>& sucPoints, const vector<uint16_t>& m
 void getSucPointsOfSection(vector<vector<uint16_t>>& sucPoints, const vector<uint16_t>& matchPoint, uint16_t*** sucTbls,
                            const vector<string>& sequences, const int section);
 
-// sum小优先,然后是差值小优先
-int selectOnePoint(vector<vector<uint16_t>>& sucPoints);
-
+// 打印后继表,测试使用
 void printSucTbls(uint16_t*** sucTbls, const vector<string>& sequences);
 
 // 可用内存在总内存中的占比比例

@@ -1,4 +1,5 @@
 // Created by D_Kuan
+
 #include "basic.h"
 
 // 读取d条序列 返回序列长度和(不算空格的长度)
@@ -311,48 +312,6 @@ void getSucPointsOfSection(vector<vector<uint16_t>>& sucPoints, const vector<uin
     // 该匹配点没有后继点，只有终点
     if (count == SIGMA_NUM) {
         sucPoints.emplace_back(vector<uint16_t>(SEQ_NUM, UINT16_MAX));
-    }
-}
-
-// sum小优先,然后是差值小优先
-int selectOnePoint(vector<vector<uint16_t>>& sucPoints) {
-    int size = sucPoints.size();
-    uint32_t minSum = UINT32_MAX;
-    vector<int> indexs;
-    indexs.reserve(size);
-    // 先求sum
-    vector<uint32_t> sums(size, 0);
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < SEQ_NUM; ++j) {
-            sums[i] += sucPoints[i][j];
-        }
-        if (minSum == sums[i]) {
-            indexs.emplace_back(i);
-        } else if (minSum > sums[i]) {
-            minSum = sums[i];
-            indexs.clear();
-            indexs.emplace_back(i);
-        }
-    }
-    // 优先选择sum小的
-    if (indexs.size() == 1) {
-        return indexs[0];
-    } else { // 否则优先返回差值小的
-        double avg = (double) sums[indexs[0]] / SEQ_NUM;;
-        double dis = DBL_MAX;
-        int index;
-        for (int i = indexs.size() - 1; i >= 0; --i) {
-            int index_temp = indexs[i];
-            double temp;
-            for (int j = 0; j < SEQ_NUM; ++j) {
-                temp += abs(sucPoints[index_temp][j] - avg);
-            }
-            if (dis > temp) {
-                dis = temp;
-                index = i;
-            }
-        }
-        return index;
     }
 }
 
