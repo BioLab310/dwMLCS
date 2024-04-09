@@ -60,10 +60,10 @@ This code uses the command line mode to pass parameters
 4) -W
    * The name of the file that represents the output file. For example, -W mlcs.txt
 5) -M C -S a -N b 
-   * These three parameters need to be used together. You can specify which successor table to use to calculate $LB(MLCS)$ by weight DAG
+   * These three parameters need to be used together. You can specify which successor table to use to calculate $LB(S)$ by weight DAG
    * Where a can only be a number of 1 and non-1, where 1 means use of Step successor table strategy, and non-1 means use of Section successor table strategy
    * b According to definition 9 or Definition 10 in the paper
-   * For example, -M C -S 1 -N 5, which means I want to use the Step successor table policy, and $\alpha$ is set to 5, calculating $LB(MLCS)$
+   * For example, -M C -S 1 -N 5, which means I want to use the Step successor table policy, and $\alpha$ is set to 5, calculating $LB(S)$
 
 For example, a complete run command:
 
@@ -73,11 +73,11 @@ For example, a complete run command:
 
 * ./dwMLCS -M B -D 40 -R seq.txt   
 
-  It means that I will use the weight DAG model proposed in this paper to calculate the $LB(MLCS)$ of 40 sequences
+  It means that I will use the weight DAG model proposed in this paper to calculate the $LB(S)$ of 40 sequences
 
 * ./dwMLCS -M C -D 10 -R seq.txt -S 1 -N 3   
 
-  It means that I will use the weight DAG model proposed in this paper, and explicitly specify the use of Step successor table strategy and set the parameter $\alpha$=3 (see Definition 9), and finally calculate the $LB(MLCS)$ of 10 sequences
+  It means that I will use the weight DAG model proposed in this paper, and explicitly specify the use of Step successor table strategy and set the parameter $\alpha$=3 (see Definition 9), and finally calculate the $LB(S)$ of 10 sequences
 
 5.License
 --
