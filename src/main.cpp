@@ -4,77 +4,77 @@
 #include "lower.h"
 #include "dwMLCS.h"
 
-int SEQ_NUM; // ĞòÁĞÌõÊı
-int SIGMA_NUM; // ×Ö·û¼¯´óĞ¡
-uint32_t SEQ_LEN_SUM; // ĞòÁĞ³¤¶È×ÜºÍ
-int MIN_LEN = UINT16_MAX; // »ñµÃĞòÁĞµÄ×îĞ¡³¤¶È
+int SEQ_NUM; // åºåˆ—æ¡æ•°
+int SIGMA_NUM; // å­—ç¬¦é›†å¤§å°
+uint32_t SEQ_LEN_SUM; // åºåˆ—é•¿åº¦æ€»å’Œ
+int MIN_LEN = UINT16_MAX; // è·å¾—åºåˆ—çš„æœ€å°é•¿åº¦
 
-string SIGMA; // ×Ö·û¼¯¼¯ºÏ
+string SIGMA; // å­—ç¬¦é›†é›†åˆ
 
-string READ_PATH = "./input.txt"; // Ä¬ÈÏÊäÈëÂ·¾¶
-string WRITE_PATH = "./mlcs.txt"; // Ä¬ÈÏÊä³öÂ·¾¶
+string READ_PATH = "./input.txt"; // é»˜è®¤è¾“å…¥è·¯å¾„
+string WRITE_PATH = "./mlcs.txt"; // é»˜è®¤è¾“å‡ºè·¯å¾„
 
-long WEIGHT_TIME_BOUND = LONG_MAX; // ÇóÄ³Ò»¸öÈ¨ÖØµÄÊ±¼äÏŞÖÆ
-clock_t WEIGHT_START_TIME; // Ä³¸öÈ¨ÖØÏÂ½ç¿ªÊ¼Ê±¼ä
+long WEIGHT_TIME_BOUND = LONG_MAX; // æ±‚æŸä¸€ä¸ªæƒé‡çš„æ—¶é—´é™åˆ¶
+clock_t WEIGHT_START_TIME; // æŸä¸ªæƒé‡ä¸‹ç•Œå¼€å§‹æ—¶é—´
 
 int main(int argc, char* argv[]) {
     clock_t start = clock();
 
-    int strategy; // Ñ¡Ôñ²ßÂÔ
-    int num; // ¶ÔÓ¦ÓÚÎÄÕÂºó¼Ì±í²¿·ÖµÄ¦ÁºÍ¦Â
+    int strategy; // é€‰æ‹©ç­–ç•¥
+    int num; // å¯¹åº”äºæ–‡ç« åç»§è¡¨éƒ¨åˆ†çš„Î±å’ŒÎ²
 
-    // Ñ¡ÔñÔËĞĞÄÇÖÖ·½·¨£º
-    // A£ºdwMLCSµÄÕûÌåËã·¨
-    // B£º×Ô¶¯ÇóÏÂ½ç£¬²»ĞèÒªÖ¸¶¨²ßÂÔºÍ²ÎÊı
-    // C: Ö¸¶¨Ä³ÖÖ²ßÂÔÇóÏÂ½ç
+    // é€‰æ‹©è¿è¡Œé‚£ç§æ–¹æ³•ï¼š
+    // Aï¼šdwMLCSçš„æ•´ä½“ç®—æ³•
+    // Bï¼šè‡ªåŠ¨æ±‚ä¸‹ç•Œï¼Œä¸éœ€è¦æŒ‡å®šç­–ç•¥å’Œå‚æ•°
+    // C: æŒ‡å®šæŸç§ç­–ç•¥æ±‚ä¸‹ç•Œ
     char method;
 
     for (int i = 1; i < argc; i += 2) {
-        // -D²ÎÊı´ú±í¶ÁÈ¡ĞòÁĞµÄ¸öÊı
+        // -Då‚æ•°ä»£è¡¨è¯»å–åºåˆ—çš„ä¸ªæ•°
         if (argv[i][0] == '-' && argv[i][1] == 'D') {
             SEQ_NUM = stoi(argv[i + 1]);
         }
-        // -R²ÎÊı´ú±íÊäÈëÂ·¾¶
+        // -Rå‚æ•°ä»£è¡¨è¾“å…¥è·¯å¾„
         else if (argv[i][0] == '-' && argv[i][1] == 'R') {
             READ_PATH = argv[i + 1];
         }
-        // -W²ÎÊı´ú±íÊä³öÂ·¾¶
+        // -Wå‚æ•°ä»£è¡¨è¾“å‡ºè·¯å¾„
         else if (argv[i][0] == '-' && argv[i][1] == 'W') {
             WRITE_PATH = argv[i + 1];
         }
-        // ÆäÖĞ-SºÍ-N±ØĞëÍ¬Ê±´«²Î£¬Èç¹û²»Ö¸¶¨-SºÍ-NÔòÊ¹ÓÃ¾­Ñé¼ÆËãÏÂ½ç
-        // -S²ÎÊı´ú±íÑ¡ÔñµÄÏÂ½ç²ßÂÔ
+        // å…¶ä¸­-Så’Œ-Nå¿…é¡»åŒæ—¶ä¼ å‚ï¼Œå¦‚æœä¸æŒ‡å®š-Så’Œ-Nåˆ™ä½¿ç”¨ç»éªŒè®¡ç®—ä¸‹ç•Œ
+        // -Så‚æ•°ä»£è¡¨é€‰æ‹©çš„ä¸‹ç•Œç­–ç•¥
         else if (argv[i][0] == '-' && argv[i][1] == 'S') {
             strategy = stoi(argv[i + 1]);
         }
-        // -N²ÎÊı´ú±íÑ¡ÔñµÄ²ßÂÔÒÔ¼°¶ÔÓ¦µÄstep»òÕßsection
+        // -Nå‚æ•°ä»£è¡¨é€‰æ‹©çš„ç­–ç•¥ä»¥åŠå¯¹åº”çš„stepæˆ–è€…section
         else if (argv[i][0] == '-' && argv[i][1] == 'N') {
             num = stoi(argv[i + 1]);
         }
-        // -M²ÎÊı´ú±íÑ¡ÔñÊÇÇómlcs»¹ÊÇÇóÏÂ½ç
+        // -Må‚æ•°ä»£è¡¨é€‰æ‹©æ˜¯æ±‚mlcsè¿˜æ˜¯æ±‚ä¸‹ç•Œ
         else if (argv[i][0] == '-' && argv[i][1] == 'M') {
             method = argv[i + 1][0];
         }
     }
 
-    // ÊäÈëĞòÁĞ
+    // è¾“å…¥åºåˆ—
     vector<string> sequences;
     readSeq(sequences);
 
     uint16_t*** sucTbls;
     getSucTbls(&sucTbls, sequences);
-    // dwMLCSµÄÕûÌåËã·¨
+    // dwMLCSçš„æ•´ä½“ç®—æ³•
     if (method == 'A') {
         clock_t lowerStartTime = clock();
         int lowerLen = quickLower(sucTbls);
-        WEIGHT_TIME_BOUND = 240000000; // Ä³¸öÈ¨ÖØ¼ÆËã×î¶à4·ÖÖÓ
+        WEIGHT_TIME_BOUND = 240000000; // æŸä¸ªæƒé‡è®¡ç®—æœ€å¤š4åˆ†é’Ÿ
         int nums[4] = {2, 3, 8, 10};
         for (const int step: nums) {
             int curLowerLen = computeLower(sequences, 1, step);
             if (curLowerLen == -2) {
                 break;
             }
-            lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
+            lowerLen = max<int>(lowerLen, curLowerLen);
         }
         WEIGHT_TIME_BOUND = 5000000;
         if (clock() - lowerStartTime < 60000000) {
@@ -87,11 +87,11 @@ int main(int argc, char* argv[]) {
 
         cout << "Total time cost:" << (clock() - start) / 1000 << "ms" << endl;
     }
-    // ×Ô¶¯ÇóÏÂ½ç£¬²»ĞèÒªÖ¸¶¨²ßÂÔºÍ²ÎÊı
+    // è‡ªåŠ¨æ±‚ä¸‹ç•Œï¼Œä¸éœ€è¦æŒ‡å®šç­–ç•¥å’Œå‚æ•°
     else if (method == 'B') {
         clock_t lowerStartTime = clock();
         int lowerLen = quickLower(sucTbls);
-        WEIGHT_TIME_BOUND = 240000000; // Ä³¸öÈ¨ÖØ¼ÆËã×î¶à4·ÖÖÓ
+        WEIGHT_TIME_BOUND = 240000000; // æŸä¸ªæƒé‡è®¡ç®—æœ€å¤š4åˆ†é’Ÿ
         int nums[4] = {2, 3, 8, 10};
         for (const int step: nums) {
             lowerLen = max<int>(lowerLen, computeLower(sequences, 1, step));
@@ -103,10 +103,10 @@ int main(int argc, char* argv[]) {
         cout << "Lower bound length:" << lowerLen << endl;
         cout << "Lower bound time cost:" << (clock() - lowerStartTime) / 1000 << "ms" << endl;
     }
-    // Ö¸¶¨Ä³ÖÖ²ßÂÔÇóÏÂ½ç£¬ĞèÒª´«ÈëÊÊµ±µÄ¦Á»òÕß¦Â´óĞ¡£¬·ñÔò¼ÆËãÏÂ½çµÄÊ±¼ä»áºÜ³¤
+    // æŒ‡å®šæŸç§ç­–ç•¥æ±‚ä¸‹ç•Œï¼Œéœ€è¦ä¼ å…¥é€‚å½“çš„Î±æˆ–è€…Î²å¤§å°ï¼Œå¦åˆ™è®¡ç®—ä¸‹ç•Œçš„æ—¶é—´ä¼šå¾ˆé•¿
     else if (method == 'C') {
         clock_t lowerStartTime = clock();
-        WEIGHT_TIME_BOUND = 240000000; // Ä³¸öÈ¨ÖØ¼ÆËã×î¶à4·ÖÖÓ
+        WEIGHT_TIME_BOUND = 240000000; // æŸä¸ªæƒé‡è®¡ç®—æœ€å¤š4åˆ†é’Ÿ
         int lowerLen = computeLower(sequences, strategy, num);
         if (lowerLen == -2) {
             cout << "The lower bound cannot be calculated based on the parameters passed in the limited time or limited memory."
