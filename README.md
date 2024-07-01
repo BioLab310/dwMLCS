@@ -15,7 +15,7 @@ dwMLCS is an algorithm that can calculate the longest common sub-sequence of any
 2.Test Data
 --
 
-The data set required for dwMLCS can be downloaded from the widely known NCBI database (Available: www.ncbi.nlm.nih.gov), or you can customize your own character sets. But some requirements need to be met, and the first line of the data set needs to be the nonduplicate symbol set(For example, A,B,C,D,E,F,G,H,I, and so on, where the order of the symbol set can be arbitrary). From the second line to the last line is the set of sequences you want to compute, and each row can have a different length
+The data set required for dwMLCS can be downloaded from the widely known NCBI database (Available: www.ncbi.nlm.nih.gov), or you can customize your own character sets. But some requirements need to be met, and the first line of the data set needs to be the nonduplicate symbol set(For example, A,B,C,D,E,F,G,H,I, and so on, where the order of the symbol set can be arbitrary, excepte symbol '$'). From the second line to the last line is the set of sequences you want to compute, and each row can have a different length
 
 We have uploaded a data set (seq.txt), which can be customized according to the format of our data set
 
